@@ -1,1 +1,4 @@
 target/
+
+CMakeLists.txt.user
+build-*/
