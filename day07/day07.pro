@@ -1,6 +1,6 @@
 QT = core
 
-CONFIG += cmdline c++17
+CONFIG += cmdline c++20
 
 SOURCES += \
         main.cpp
