@@ -8,6 +8,7 @@
 #include <utility>
 #include <cmath>
 
+long long leastCommonMultiple(const QList<int> &numbers);
 QList<std::pair<int, int>> factorize(int n);
 
 int main(int argc, char *argv[]) {
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    QMap<int, int> primeFactors;
+    QList<int> stepsPart2;
 
     for (QString position: startingPositions) {
         int steps = 0;
@@ -63,20 +64,30 @@ int main(int argc, char *argv[]) {
             position = (directions[i] == 'L'? paths[position].first : paths[position].second);
         }
 
-        for (auto [prime, count]: factorize(steps)) {
+        stepsPart2.append(steps);
+    }
+
+    out << "Part 1: " << stepsPart1 << "\n";
+    out << "Part 2: " << leastCommonMultiple(stepsPart2) << "\n";
+
+    return 0;
+}
+
+long long leastCommonMultiple(const QList<int> &numbers) {
+    QMap<int, int> primeFactors;
+
+    for (int num: numbers) {
+        for (auto [prime, count]: factorize(num)) {
             primeFactors[prime] = std::max(primeFactors[prime], count);
         }
     }
 
-    long long stepsPart2 = 1;
+    long long lcm = 1;
     for (int prime: primeFactors.keys()) {
-        stepsPart2 *= std::pow((long long)prime, (long long)primeFactors[prime]);
+        lcm *= std::pow((long long)prime, (long long)primeFactors[prime]);
     }
 
-    out << "Part 1: " << stepsPart1 << "\n";
-    out << "Part 2: " << stepsPart2 << "\n";
-
-    return 0;
+    return lcm;
 }
 
 QList<std::pair<int, int>> factorize(int n) {
