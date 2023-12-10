@@ -3,6 +3,7 @@
 #include <QString>
 #include <QStringList>
 #include <QList>
+#include <QHash>
 #include <QDebug>
 #include <compare>
 
@@ -40,6 +41,10 @@ struct Vec2 {
 
     friend Vec2 operator-(Vec2 a) {
         return {-a.x, -a.y};
+    }
+
+    friend size_t qHash(Vec2 v, size_t seed) {
+        return qHashMulti(seed, v.x, v.x);
     }
 };
 
@@ -123,51 +128,34 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // mark path
-    for (Vec2 pos: path) {
-        maze[pos.y][pos.x] = 'X';
+    // fill in the correct symbol for the start
+    for (auto [symbol, connectedDirections]: pipeSegmentTypes.asKeyValueRange()) {
+        QList<Vec2> prevAndNext = {path.last(), path[1]};
+        if (prevAndNext.contains(start + connectedDirections[0]) && prevAndNext.contains(start + connectedDirections[1])) {
+            maze[start.y][start.x] = symbol;
+            break;
+        }
     }
 
-    // find out if the loop is clockwise or counter-clockwise
-    int netRightTurns = 0;
-    for (int i = 0; i < path.length() - 1; i++) {
-        Vec2 posPrev = path[(i - 1 + path.length()) % path.length()];
-        Vec2 posCurr = path[i];
-        Vec2 posNext = path[(i + 1) % path.length()];
+    // convert path to set for faster lookup
+    QSet<Vec2> pointsOnPath(path.begin(), path.end());
 
-        Vec2 inDir = posCurr - posPrev;
-        Vec2 outDir = posNext - posCurr;
-
-        // cross product
-        netRightTurns += inDir.x * outDir.y - inDir.y * outDir.x;
-    }
-
-    bool clockwise = netRightTurns > 0;
-
-    // mark and count all points inside the loop
     int pointsInside = 0;
-    for (int i = 0; i < path.length() - 1; i++) {
-        Vec2 posPrev = path[(i - 1 + path.length()) % path.length()];
-        Vec2 posCurr = path[i];
-        Vec2 posNext = path[(i + 1) % path.length()];
+    for (int y = 0; y < height; y++) {
+        bool inside = false;
 
-        Vec2 inDir = posCurr - posPrev;
-        Vec2 outDir = posNext - posCurr;
-
-        Vec2 paintDir = inDir.rotated90(clockwise);
-        while (paintDir != outDir) {
-            Vec2 pos = posCurr + paintDir;
-            while (maze[pos.y][pos.x] != 'X') {
-                // don't double count
-                if (maze[pos.y][pos.x] != 'I') {
-                    maze[pos.y][pos.x] = 'I';
-                    pointsInside++;
+        for (int x = 0; x < width; x++) {
+            if (pointsOnPath.contains({x, y})) {
+                if (pipeSegmentTypes[maze[y][x]].contains(up)) {
+                    inside = !inside;
                 }
 
-                pos += paintDir;
+                continue;
             }
 
-            paintDir.rotate90(!clockwise);
+            if (inside) {
+                pointsInside++;
+            }
         }
     }
 
