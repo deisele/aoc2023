@@ -1,7 +1,6 @@
 QT = core
 
-CONFIG += cmdline c++17
-QMAKE_CXXFLAGS += -ftrapv
+CONFIG += cmdline c++20
 
 SOURCES += \
         main.cpp
