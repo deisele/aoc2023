@@ -43,10 +43,10 @@ struct Vec2 {
 
 int numEnergizedTiles(const QStringList &grid, Vec2 startingPosition, Vec2 startingDirection);
 
-Vec2 up = {0, -1};
-Vec2 down = {0, 1};
-Vec2 left = {-1, 0};
-Vec2 right = {1, 0};
+const Vec2 up = {0, -1};
+const Vec2 down = {0, 1};
+const Vec2 left = {-1, 0};
+const Vec2 right = {1, 0};
 
 int main(int argc, char *argv[]) {
     QTextStream out(stdout);
