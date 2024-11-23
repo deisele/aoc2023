@@ -30,13 +30,11 @@ int main() {
         return 1;
     }
 
-    QTextStream in(&file);
-
     QList<Brick> bricks;
 
+    QTextStream in(&file);
     while (!in.atEnd()) {
         QString line = in.readLine();
-
         QStringList parts = line.split("~");
 
         QStringList aParts = parts[0].split(",");
@@ -45,17 +43,16 @@ int main() {
         QStringList bParts = parts[1].split(",");
         Cube b = {bParts[2].toInt(), bParts[0].toInt(), bParts[1].toInt()};
 
-        if (a.z > b.z) {
-            std::swap(a, b);
+        if (a.x > b.x || a.y > b.y || a.z > b.z || a.x < 0 || b.x > 9 || a.y < 0 || b.y > 9) {
+            qFatal() << "Invalid input";
+            return 1;
         }
 
         bricks.append({a, b});
     }
 
     std::sort(bricks.begin(), bricks.end());
-
     bricks = dropBricks(bricks);
-
     std::sort(bricks.begin(), bricks.end());
 
     int safeToRemove = 0;
@@ -85,18 +82,24 @@ int main() {
 }
 
 QList<Brick> dropBricks(QList<Brick> bricks) {
-    for (Brick &brick: bricks) {
-        int minZ = 1;
+    QList<QList<int>> heightmap(10, QList<int>(10, 0));
 
-        for (const Brick &other: bricks) {
-            if (other.a.z < brick.a.z && other.b.x >= brick.a.x && other.a.x <= brick.b.x && other.b.y >= brick.a.y && other.a.y <= brick.b.y) {
-                minZ = std::max(minZ, other.b.z + 1);
+    for (Brick &brick: bricks) {
+        int newZ = 0;
+        for (int x = brick.a.x; x <= brick.b.x; x++) {
+            for (int y = brick.a.y; y <= brick.b.y; y++) {
+                newZ = std::max(newZ, heightmap[x][y] + 1);
             }
         }
 
-        int diff = brick.a.z - minZ;
-        brick.a.z -= diff;
-        brick.b.z -= diff;
+        brick.b.z -= brick.a.z - newZ;
+        brick.a.z = newZ;
+
+        for (int x = brick.a.x; x <= brick.b.x; x++) {
+            for (int y = brick.a.y; y <= brick.b.y; y++) {
+                heightmap[x][y] = std::max(heightmap[x][y], brick.b.z);
+            }
+        }
     }
 
     return bricks;
